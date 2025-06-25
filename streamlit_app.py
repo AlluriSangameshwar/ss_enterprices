@@ -2,7 +2,27 @@ import streamlit as st
 from docx import Document
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.shared import Inches
+from docx.oxml import OxmlElement
 from io import BytesIO
+
+# Function to add a horizontal line using a 1-cell table with bottom border
+def add_horizontal_line(doc):
+    table = doc.add_table(rows=1, cols=1)
+    table.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+    table.allow_autofit = True
+    cell = table.cell(0, 0)
+    cell.text = ""
+    tc = cell._tc
+    tcPr = tc.get_or_add_tcPr()
+    borders = tcPr.get_or_add_tcBorders()
+    bottom = borders._element.xpath('./w:bottom')
+    if not bottom:
+        bottom_border = OxmlElement('w:bottom')
+        bottom_border.set('w:val', 'single')
+        bottom_border.set('w:sz', '12')  # Thickness
+        bottom_border.set('w:space', '0')
+        bottom_border.set('w:color', '000000')
+        borders._element.append(bottom_border)
 
 # Function to generate Word bill
 def generate_docx(customer_name, bill_to, bill_date, items):
@@ -23,8 +43,8 @@ def generate_docx(customer_name, bill_to, bill_date, items):
         'Cell: 9014462295, 7999110733'
     ).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
-    # Add horizontal line using underscores
-    doc.add_paragraph("_" * 150)
+    # Add bold full-width horizontal line
+    add_horizontal_line(doc)
 
     # Customer name (left aligned)
     name_para = doc.add_paragraph(f"Customer Name: {customer_name}")
