@@ -5,24 +5,26 @@ from docx.shared import Inches
 from docx.oxml import OxmlElement
 from io import BytesIO
 
-# Function to add a horizontal line using a 1-cell table with bottom border
+# Function to add horizontal line using a table with bottom border
 def add_horizontal_line(doc):
     table = doc.add_table(rows=1, cols=1)
     table.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
     table.allow_autofit = True
     cell = table.cell(0, 0)
     cell.text = ""
+
     tc = cell._tc
     tcPr = tc.get_or_add_tcPr()
-    borders = tcPr.get_or_add_tcBorders()
-    bottom = borders._element.xpath('./w:bottom')
-    if not bottom:
-        bottom_border = OxmlElement('w:bottom')
-        bottom_border.set('w:val', 'single')
-        bottom_border.set('w:sz', '12')  # Thickness
-        bottom_border.set('w:space', '0')
-        bottom_border.set('w:color', '000000')
-        borders._element.append(bottom_border)
+
+    # Create borders manually
+    borders = OxmlElement('w:tcBorders')
+    bottom = OxmlElement('w:bottom')
+    bottom.set('w:val', 'single')   # Line type
+    bottom.set('w:sz', '12')        # Thickness
+    bottom.set('w:space', '0')      # No spacing
+    bottom.set('w:color', '000000') # Black line
+    borders.append(bottom)
+    tcPr.append(borders)
 
 # Function to generate Word bill
 def generate_docx(customer_name, bill_to, bill_date, items):
@@ -36,30 +38,29 @@ def generate_docx(customer_name, bill_to, bill_date, items):
         section.left_margin = Inches(0.5)
         section.right_margin = Inches(0.5)
 
-    # Company Header
+    # Header
     doc.add_heading('S. S. ENTERPRISES', level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
     doc.add_paragraph(
         'Aluminium Interior Works\nPlot No. 651/A, East Kakatiyanagar, Neredmet, Malkajgiri, Secunderabad – 500056\n'
         'Cell: 9014462295, 7999110733'
     ).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
-    # Add bold full-width horizontal line
+    # Horizontal line
     add_horizontal_line(doc)
 
-    # Customer name (left aligned)
+    # Customer name and date
     name_para = doc.add_paragraph(f"Customer Name: {customer_name}")
     name_para.runs[0].bold = True
 
-    # Date (right aligned)
     date_para = doc.add_paragraph(f"Date: {bill_date}")
     date_para.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
     date_para.runs[0].bold = True
 
-    # Bill to section
+    # Bill To
     doc.add_paragraph(f'Bill to: {bill_to}')
     doc.add_paragraph('BILL', style='Heading 2').alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
-    # Table Headers
+    # Table
     headers = [
         "S.No.", "Item Name", "Sub Item Name", "Width in Sq.ft", "Height in Sq.ft", "Depth Sq.ft",
         "Total Sq.ft", "Price Sq.ft", "Per Sq.ft/Each", "Total Price"
@@ -70,26 +71,23 @@ def generate_docx(customer_name, bill_to, bill_date, items):
     for i, h in enumerate(headers):
         table.rows[0].cells[i].text = h
 
-    # Table Rows
     for item in items:
         row = table.add_row().cells
         for i, h in enumerate(headers):
             row[i].text = str(item.get(h, ""))
 
-    # Add Payment Terms section
+    # Payment Terms
     doc.add_paragraph("\nNote - Payment Terms and Conditions", style='Heading 2')
-
     terms = [
         "1. Advance Payment: An initial advance of 25% of the total project cost is required before commencement of work.",
         "2. Work Initiation: A further 25% is to be paid once the work has officially started.",
         "3. Post-Framing Stage: An additional 25% is to be paid upon completion of the framing stage.",
         "4. Final Payment: The remaining 25% must be paid upon completion of the finishing work."
     ]
-
     for term in terms:
         doc.add_paragraph(term, style='List Number')
 
-    # Save Word to BytesIO
+    # Save document
     file_stream = BytesIO()
     doc.save(file_stream)
     file_stream.seek(0)
@@ -99,13 +97,12 @@ def generate_docx(customer_name, bill_to, bill_date, items):
 st.set_page_config(page_title="S. S. Enterprises Bill Generator", layout="wide")
 st.title("🧾 S. S. Enterprises - Bill Generator")
 
-# Form inputs
-customer_name = st.text_input("Customer Name", value="")
-bill_to = st.text_input("Bill To", value="")
+# Form
+customer_name = st.text_input("Customer Name", value="Mr. Ramesh")
+bill_to = st.text_input("Bill To", value="Flat No.112 VNR Apartment, Gajularamaram site.")
 bill_date = st.date_input("Bill Date")
 
 st.markdown("### Add Items Below")
-
 item_count = st.number_input("How many items?", min_value=1, max_value=50, value=5)
 items = []
 
@@ -141,11 +138,9 @@ for i in range(int(item_count)):
             "Total Price": total_price
         })
 
-# Generate Word file
+# Generate
 if st.button("Generate Word Bill"):
     file = generate_docx(customer_name, bill_to, bill_date, items)
-
-    # Clean filename using customer name
     safe_name = customer_name.strip().replace(" ", "_")
     filename = f"S_S_Enterprises_{safe_name}.docx"
 
