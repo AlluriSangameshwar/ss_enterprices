@@ -1,22 +1,38 @@
 import streamlit as st
 from docx import Document
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.shared import Inches
 from io import BytesIO
 
 # Function to generate Word bill
 def generate_docx(customer_name, bill_to, bill_date, items):
     doc = Document()
+
+    # Set 0.5 inch margins
+    sections = doc.sections
+    for section in sections:
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
+
+    # Company Header
     doc.add_heading('S. S. ENTERPRISES', level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
     doc.add_paragraph(
         'Aluminium Interior Works\nPlot No. 651/A, East Kakatiyanagar, Neredmet, Malkajgiri, Secunderabad – 500056\n'
         'Cell: 9014462295, 7999110733'
     ).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
+    # Horizontal Line
+    doc.add_paragraph('_' * 100)
+
+    # Customer Details
     doc.add_paragraph(f'Customer Name: {customer_name}')
     doc.add_paragraph(f'Bill to: {bill_to}')
     doc.add_paragraph(f'Date: {bill_date}')
     doc.add_paragraph('BILL', style='Heading 2').alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
+    # Table Headers
     headers = [
         "S.No.", "Item Name", "Sub Item Name", "Width in Sq.ft", "Height in Sq.ft", "Depth Sq.ft",
         "Total Sq.ft", "Price Sq.ft", "Per Sq.ft/Each", "Total Price"
@@ -24,15 +40,16 @@ def generate_docx(customer_name, bill_to, bill_date, items):
 
     table = doc.add_table(rows=1, cols=len(headers))
     table.style = 'Table Grid'
-
     for i, h in enumerate(headers):
         table.rows[0].cells[i].text = h
 
+    # Table Rows
     for item in items:
         row = table.add_row().cells
         for i, h in enumerate(headers):
             row[i].text = str(item.get(h, ""))
 
+    # Return the Word file
     file_stream = BytesIO()
     doc.save(file_stream)
     file_stream.seek(0)
@@ -42,7 +59,7 @@ def generate_docx(customer_name, bill_to, bill_date, items):
 st.set_page_config(page_title="S. S. Enterprises Bill Generator", layout="wide")
 st.title("🧾 S. S. Enterprises - Bill Generator")
 
-# New: Customer Name input
+# Form inputs
 customer_name = st.text_input("Customer Name", value="Mr. Ramesh")
 bill_to = st.text_input("Bill To", value="Flat No.112 VNR Apartment, Gajularamaram site.")
 bill_date = st.date_input("Bill Date")
@@ -88,7 +105,7 @@ for i in range(int(item_count)):
 if st.button("Generate Word Bill"):
     file = generate_docx(customer_name, bill_to, bill_date, items)
 
-    # Clean filename (remove spaces/special chars)
+    # Clean filename using customer name
     safe_name = customer_name.strip().replace(" ", "_")
     filename = f"S_S_Enterprises_{safe_name}.docx"
 
