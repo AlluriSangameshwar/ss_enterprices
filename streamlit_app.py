@@ -23,13 +23,19 @@ def generate_docx(customer_name, bill_to, bill_date, items):
         'Cell: 9014462295, 7999110733'
     ).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
-    # Horizontal Line
-    doc.add_paragraph('_' * 100)
+    # Add true horizontal line using border
+    hr_para = doc.add_paragraph()
+    hr_run = hr_para.add_run()
+    hr_para.paragraph_format.border_bottom = True
 
-    # Customer Details
-    doc.add_paragraph(f'Customer Name: {customer_name}')
+    # Customer name left, date right
+    customer_para = doc.add_paragraph()
+    tab_stops = customer_para.paragraph_format.tab_stops
+    tab_stops.add_tab_stop(Inches(6.5))  # Adjust as needed
+    customer_para.add_run(f"Customer Name: {customer_name}\tDate: {bill_date}").bold = True
+
+    # Bill to section
     doc.add_paragraph(f'Bill to: {bill_to}')
-    doc.add_paragraph(f'Date: {bill_date}')
     doc.add_paragraph('BILL', style='Heading 2').alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     # Table Headers
@@ -49,7 +55,20 @@ def generate_docx(customer_name, bill_to, bill_date, items):
         for i, h in enumerate(headers):
             row[i].text = str(item.get(h, ""))
 
-    # Return the Word file
+    # Add Payment Terms section
+    doc.add_paragraph("\nNote - Payment Terms and Conditions", style='Heading 2')
+
+    terms = [
+        "1. Advance Payment: An initial advance of 25% of the total project cost is required before commencement of work.",
+        "2. Work Initiation: A further 25% is to be paid once the work has officially started.",
+        "3. Post-Framing Stage: An additional 25% is to be paid upon completion of the framing stage.",
+        "4. Final Payment: The remaining 25% must be paid upon completion of the finishing work."
+    ]
+
+    for term in terms:
+        doc.add_paragraph(term, style='List Number')
+
+    # Save Word to BytesIO
     file_stream = BytesIO()
     doc.save(file_stream)
     file_stream.seek(0)
