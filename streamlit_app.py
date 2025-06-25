@@ -23,10 +23,8 @@ def generate_docx(customer_name, bill_to, bill_date, items):
         'Cell: 9014462295, 7999110733'
     ).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
-    # Add true horizontal line using border
-    hr_para = doc.add_paragraph()
-    hr_run = hr_para.add_run()
-    hr_para.paragraph_format.border_bottom = True
+    # Add horizontal line using underscores
+    doc.add_paragraph("_" * 150)
 
     # Customer name (left aligned)
     name_para = doc.add_paragraph(f"Customer Name: {customer_name}")
@@ -82,8 +80,8 @@ st.set_page_config(page_title="S. S. Enterprises Bill Generator", layout="wide")
 st.title("🧾 S. S. Enterprises - Bill Generator")
 
 # Form inputs
-customer_name = st.text_input("Customer Name", value=" ")
-bill_to = st.text_input("Bill To", value=" ")
+customer_name = st.text_input("Customer Name", value="")
+bill_to = st.text_input("Bill To", value="")
 bill_date = st.date_input("Bill Date")
 
 st.markdown("### Add Items Below")
