@@ -82,8 +82,8 @@ st.set_page_config(page_title="S. S. Enterprises Bill Generator", layout="wide")
 st.title("🧾 S. S. Enterprises - Bill Generator")
 
 # Form inputs
-customer_name = st.text_input("Customer Name", value="Mr. Ramesh")
-bill_to = st.text_input("Bill To", value="Flat No.112 VNR Apartment, Gajularamaram site.")
+customer_name = st.text_input("Customer Name", value=" ")
+bill_to = st.text_input("Bill To", value=" ")
 bill_date = st.date_input("Bill Date")
 
 st.markdown("### Add Items Below")
