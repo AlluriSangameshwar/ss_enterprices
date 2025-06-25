@@ -28,11 +28,14 @@ def generate_docx(customer_name, bill_to, bill_date, items):
     hr_run = hr_para.add_run()
     hr_para.paragraph_format.border_bottom = True
 
-    # Customer name left, date right
-    customer_para = doc.add_paragraph()
-    tab_stops = customer_para.paragraph_format.tab_stops
-    tab_stops.add_tab_stop(Inches(6.5))  # Adjust as needed
-    customer_para.add_run(f"Customer Name: {customer_name}\tDate: {bill_date}").bold = True
+    # Customer name (left aligned)
+    name_para = doc.add_paragraph(f"Customer Name: {customer_name}")
+    name_para.runs[0].bold = True
+
+    # Date (right aligned)
+    date_para = doc.add_paragraph(f"Date: {bill_date}")
+    date_para.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+    date_para.runs[0].bold = True
 
     # Bill to section
     doc.add_paragraph(f'Bill to: {bill_to}')
